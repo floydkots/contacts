@@ -89,7 +89,7 @@
       numOfContacts: 0,
       items: [
         {
-          icon: 'contacts', text: 'Contacts', route: '/'
+          icon: 'contacts', text: 'Contacts', route: '/contacts'
         },
         {icon: 'history', text:'Frequently accessed', route: '/frequent'},
         {icon: 'content_copy', text: 'Duplicates', route: '/merge'},

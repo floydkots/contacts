@@ -21,6 +21,7 @@ const router = new VueRouter({
   mode: 'history',
   routes: [
     {path: '/', component: Home},
+    {path: '/contacts', component: Home},
     {path: '/frequent', component: Frequent},
     {path: '/merge', component: Duplicates}
   ]
