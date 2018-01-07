@@ -15,39 +15,94 @@
       :disabled="$store.state.tooltips"
     >
       <span>Back</span>
-    <v-btn
-      flat
-      icon
-      @click="$store.dispatch('toggleSearch')"
-    >
-      <v-icon>
-        keyboard_backspace
-      </v-icon>
-    </v-btn>
+      <v-btn
+        flat
+        icon
+        slot="activator"
+        @click="$store.dispatch('toggleSearch')"
+      >
+        <v-icon>
+          keyboard_backspace
+        </v-icon>
+      </v-btn>
     </v-tooltip>
 
-    <v-text-field
-      light
-      solo
+    <v-select
       id="search"
+      ref="search"
       clearable
-      single-line
-      key="search"
-      transition="dialog-bottom-transition"
+      append-icon=""
       prepend-icon="search"
       placeholder="Search"
-      style=""
-      ref="search"
-    ></v-text-field>
+      autocomplete
+      solo
+      light
+      required
+      :items="items"
+      item-text="fullName"
+      item-value="id"
+      :search-input.sync="search"
+      v-model="select"
+    >
+      <template slot="item" slot-scope="data">
+        <v-list-tile-avatar>
+          <v-avatar
+            size="40px"
+            :class="data.item.avatar ? '' : data.item.color"
+            :style="{justifyContent: 'center', minWidth: '40px'}"
+          >
+            <img
+              v-if="data.item.avatar"
+              :src="data.item.avatar"
+              alt="avatar"
+            />
+            <span
+              v-else
+              class="white--text headline"
+            >
+              {{data.item.fullName ? data.item.fullName.slice(0, 1).toUpperCase() : ''}}
+            </span>
+          </v-avatar>
+        </v-list-tile-avatar>
+        <v-list-tile-title v-html="data.item.fullName"/>
+      </template>
+    </v-select>
   </v-toolbar>
 </template>
 
 <script>
   export default {
     name: "search-toolbar",
-    updated () {
-      if (this.$store.state.search) {
-        this.$refs.search.focus();
+    data () {
+      return {
+        items: [],
+        search: null,
+        select: null,
+      }
+    },
+    watch: {
+      search(val) {
+        this.queryContacts(val);
+      },
+
+      select(val) {
+        if (val !== null && val !== undefined) {
+          this.$store.dispatch('setActiveId', val);
+          this.$store.dispatch('toggleViewContact');
+          this.$store.dispatch('toggleSearch');
+          this.$refs.search.clearableCallback();
+        }
+      }
+    },
+    methods: {
+      queryContacts (v) {
+        if (v) {
+          this.items = this.$store.state.contacts.filter(e => {
+            return (e.fullName || '').toLowerCase().indexOf((v || '').toLowerCase()) > -1
+          });
+        } else {
+          this.items = [];
+        }
       }
     }
   }

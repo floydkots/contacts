@@ -27,12 +27,38 @@
             @mouseleave="fullNameHover = false"
             @mouseenter="fullNameHover = true"
           >
-            <v-flex xs2 class="text-xs-center">
-              <v-avatar size="50px">
-                <img
-                  src="//ssl.gstatic.com/s2/oz/images/sge/grey_silhouette.png"
-                  alt="Grey silhouette"
+            <v-flex
+              xs2
+              class="text-xs-center"
+              @mouseenter="avatar_hover = true"
+              @mouseleave="avatar_hover = false"
+            >
+              <v-avatar
+                size="50px"
+                @click="openSlim"
+                :style="{
+                    cursor: 'pointer',
+                    backgroundSize: 'contain',
+                    backgroundColor: 'white',
+                    backgroundImage: contact.avatar ? `url(${contact.avatar})` : 'url(https://ssl.gstatic.com/s2/oz/images/sge/grey_silhouette.png)',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center center',
+                    border: '2px solid #E3E3DE'
+                  }"
+              >
+                <v-btn
+                  fab
+                  small
+                  color="black"
+                  class="ma-0"
+                  :style="{opacity: avatar_hover ? '0.5' : '0'}"
                 >
+                  <v-icon
+                    color="white"
+                  >
+                    photo_camera
+                  </v-icon>
+                </v-btn>
               </v-avatar>
             </v-flex>
 
@@ -48,7 +74,7 @@
                 :rules="fullNameRules"
                 required
                 :validateOnBlur="true"
-              ></v-text-field>
+              />
             </v-flex>
 
             <v-flex
@@ -113,7 +139,8 @@
                   class="caption"
                   placeholder="Date of Birth"
                   readonly
-                ></v-text-field>
+                  :rules="dateOfBirthRules"
+                />
 
                 <v-date-picker
                   v-model="contact.dateOfBirth"
@@ -123,7 +150,7 @@
                 >
                   <template slot-scope="{ save, cancel }">
                     <v-card-actions>
-                      <v-spacer></v-spacer>
+                      <v-spacer/>
                       <v-btn
                         flat
                         color="primary"
@@ -164,7 +191,7 @@
                 </v-btn>
               </v-tooltip>
             </v-flex>
-            <v-spacer></v-spacer>
+            <v-spacer/>
           </v-layout>
           <!-- Date of Birth Markup end -->
 
@@ -200,10 +227,11 @@
                 >
                   <v-flex xs8>
                     <v-text-field
+                      ref="addresses"
                       class="caption"
                       placeholder="Address"
                       v-model="address.value"
-                    ></v-text-field>
+                    />
                   </v-flex>
                 </template>
                 <template
@@ -211,10 +239,11 @@
                 >
                   <v-flex xs5>
                     <v-text-field
+                      ref="addresses"
                       class="caption"
                       placeholder="Address"
                       v-model="address.value"
-                    ></v-text-field>
+                    />
                   </v-flex>
 
                   <v-flex xs3>
@@ -333,7 +362,7 @@
                       required
                       :rules="phoneRules"
                       :validateOnBlur="true"
-                    ></v-text-field>
+                    />
                   </v-flex>
                 </template>
 
@@ -351,7 +380,7 @@
                       required
                       :rules="phoneRules"
                       :validateOnBlur="true"
-                    ></v-text-field>
+                    />
                   </v-flex>
                   <v-flex xs3>
                     <v-select
@@ -455,7 +484,7 @@
                       required
                       :rules="emailRules"
                       :validateOnBlur="true"
-                    ></v-text-field>
+                    />
                   </v-flex>
                 </template>
 
@@ -471,7 +500,7 @@
                       required
                       :rules="emailRules"
                       :validateOnBlur="true"
-                    ></v-text-field>
+                    />
                   </v-flex>
                   <v-flex xs3>
                     <v-select
@@ -540,7 +569,7 @@
         <v-card-actions
           class="pt-0"
         >
-          <v-spacer></v-spacer>
+          <v-spacer/>
           <v-btn
             flat
             large
@@ -550,7 +579,9 @@
           <v-btn
             flat
             large
-            @click="toggleEdit(contact.id)"
+            color="success"
+            @click="saveEditedContact"
+            :disabled="!validEntries()"
           >Save</v-btn>
         </v-card-actions>
       </div>
@@ -559,10 +590,13 @@
 </template>
 
 <script>
+  import { fetchContact, saveContact } from "../api/database";
+
   export default {
     name: "edit-contact",
     data: () => {
       return {
+        avatar_hover: false,
         menu: false,
         contact: {
           id:null,
@@ -574,7 +608,7 @@
           starred: false,
           hidden: false
         },
-        contact_dummy: {
+        temp_contact: {
           id:null,
           fullName: "",
           avatar: "",
@@ -595,7 +629,7 @@
           (v) => v && v.split(" ").length > 1 && v.split(" ")[1].length > 0 || 'Full Name must have at least 2 names'
         ],
         dateOfBirthRules: [
-          // (v) => !!v || 'Date of Birth is required'
+          (v) => !!v || 'Date of Birth is required'
         ],
         phoneRules: [
           (v) => !!v || 'Phone is required'
@@ -610,7 +644,8 @@
     computed: {
       contactToEdit: function() {
         const contact = this.$store.getters.getActiveContact;
-          return contact ? JSON.parse(JSON.stringify(contact)) : this.contact_dummy;
+        if (contact) this.temp_contact = JSON.parse(JSON.stringify(contact));
+        return contact ? JSON.parse(JSON.stringify(contact)) : this.temp_contact;
       },
       newAddressId: function() {
         return this.contact.addresses.slice(-1)[0].id + 1;
@@ -624,29 +659,45 @@
     },
 
     methods: {
+      openSlim: function() {
+        if (this.contact.avatar) {
+          this.$store.state.slim.instance.load(this.contact.avatar, (error, data) => {
+            if (error) {
+              this.$store.dispatch('setSnackbar', {
+                color: 'info',
+                message: 'Unable to automatically load your avatar. Proceed with manual upload.'
+              });
+            }
+          });
+        }
+        this.$store.dispatch('setSlim', {contact: this.contact});
+      },
       addAddress: function() {
         this.contact.addresses.push({
-          id: ++this.newAddressId,
+          id: this.newAddressId + 1,
           value: "",
           label: ""
         });
       },
       addPhone: function() {
         this.contact.phones.push({
-          id: ++this.newPhoneId,
+          id: this.newPhoneId + 1,
           value: "",
           label: ""
         })
       },
       addEmail: function() {
         this.contact.emails.push({
-          id: ++this.newEmailId,
+          id: this.newEmailId + 1,
           value: "",
           label: ""
         })
       },
+      removeAvatar: function() {
+        this.contact.avatar = "";
+      },
       removeFullName: function() {
-        // this.contact.fullName = "";
+        this.contact.fullName = "";
         this.$refs.fullName.reset();
       },
       removeDateOfBirth: function() {
@@ -706,26 +757,109 @@
       clearEditContact: function() {
         this.removeFullName();
         this.removeDateOfBirth();
-        for (let address of this.contact.addresses) {
-          this.removeAddress(address);
+        if (this.contact.addresses) {
+          for (let address of this.contact.addresses) {
+            this.removeAddress(address);
+          }
         }
-        for (let phone of this.contact.phones) {
-          this.removePhone(phone);
+        if (this.contact.phones) {
+          for (let phone of this.contact.phones) {
+            this.removePhone(phone);
+          }
         }
-        for (let email of this.contact.emails) {
-          this.removeEmail(email);
+        if (this.contact.emails) {
+          for (let email of this.contact.emails) {
+            this.removeEmail(email);
+          }
         }
       },
       cancelEditContact: function() {
         this.clearEditContact();
+        this.contact = JSON.parse(JSON.stringify(this.temp_contact));
         this.$store.dispatch('toggleEditContact');
         this.$store.dispatch('setActiveId', null);
       },
+      validEntries: function() {
+        let fullName = false;
+        if (this.$refs.fullName) {
+          fullName = this.$refs.fullName.valid;
+        }
+
+        let dateOfBirth = false;
+        if (this.$refs.dateOfBirth ) {
+          dateOfBirth = this.$refs.dateOfBirth.valid;
+        }
+
+        const addresses = () => {
+          for (const address of this.$refs.addresses) {
+            if (!address.valid) {
+              return false;
+            }
+          }
+          return true;
+        };
+
+        let phones = () => {
+          if (!this.contact.phones) return false;
+          for (const phone of this.contact.phones) {
+            if (phone.id !== null && phone.id !== undefined) {
+              if (!(this.$refs[`phone_${phone.id}`] && this.$refs[`phone_${phone.id}`][0].valid)) {
+                return false;
+              }
+            }
+          }
+          return this.contact.phones[0] ? !!this.contact.phones[0].value : false;
+        };
+
+        let emails = () => {
+          for (const email of this.contact.emails) {
+            if (email.id !== null && email.id !== undefined) {
+              if (!(this.$refs[`email_${email.id}`] && this.$refs[`email_${email.id}`][0].valid)) {
+                return false;
+              }
+            }
+          }
+          return !!this.contact.emails[0].value;
+        };
+
+        return (fullName && dateOfBirth && addresses() && phones() && emails());
+      },
+      saveEditedContact: function() {
+        let my_this = this;
+        if (this.validEntries()) {
+          this.$store.dispatch('setSnackbar', {
+            color: 'info',
+            message: 'Saving contact...',
+          });
+          function callback(error) {
+            let snackbar = {};
+            if (error) {
+              snackbar = {
+                color: 'error',
+                message:`${error}`,
+              };
+            } else {
+              snackbar = {
+                color: 'success',
+                message: 'Contact saved successfully!',
+              };
+            }
+            my_this.$store.dispatch('setSnackbar', snackbar);
+          }
+          saveContact(my_this.contact, callback);
+          this.toggleEdit(this.contact.id);
+        } else {
+          this.$store.dispatch('setSnackbar', {
+            color: 'error',
+            message: 'There were errors. Correct and resubmit'
+          })
+        }
+      },
       toggleEdit: function(id) {
         this.$store.dispatch('setActiveId', id);
-        this.$store.dispatch('setViewTransition', false);
         this.$store.dispatch('toggleEditContact');
         if (!this.$store.state.view_contact) {
+          this.$store.dispatch('setViewTransition', false);
           this.$nextTick(() => {
             this.$store.dispatch('toggleViewContact');
           })
@@ -795,7 +929,6 @@
                   cookie.set('countryCode', country_code, {expires: 1});
                   callback(country_code);
                   instance.$nextTick(function() {
-                    console.log("Setting country");
                     country_select.intlTelInput("setCountry", country_code);
                   });
                 })
@@ -818,14 +951,6 @@
       });
 
     },
-
-    beforeDestroy() {
-      console.log("Before destroy");
-    },
-
-    destroyed() {
-      console.log("Destroyed");
-    }
   }
 </script>
 

@@ -17,17 +17,37 @@
           <v-avatar
             size="70px"
             class="mr-3"
+            @click="openSlim"
+            @mouseenter="avatar_hover = true"
+            @mouseleave="avatar_hover = false"
+            :style="{
+                    cursor: 'pointer',
+                    backgroundSize: 'contain',
+                    backgroundColor: 'white',
+                    backgroundImage: contact.avatar ? `url(${contact.avatar})` : 'url(https://ssl.gstatic.com/s2/oz/images/sge/grey_silhouette.png)',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center center',
+                    border: '5px solid #E3E3DE'
+                  }"
           >
-            <img
-              :src="contact.avatar"
-              :style="{border: '5px solid #E3E3DE'}"
-              alt="`${contact.name}'s avatar`"
+            <v-btn
+              fab
+              color="black"
+              class="ma-0"
+              :style="{opacity: avatar_hover ? '0.5' : '0'}"
             >
+              <v-icon
+                large
+                color="white"
+              >
+                photo_camera
+              </v-icon>
+            </v-btn>
           </v-avatar>
           <span
             class="py-4 headline"
           >
-            {{ contact.name }}
+            {{ contact.fullName }}
           </span>
         </v-flex>
 
@@ -50,7 +70,7 @@
           </v-btn>
         </v-tooltip>
 
-        <v-spacer></v-spacer>
+        <v-spacer/>
 
         <v-tooltip
           bottom
@@ -129,7 +149,7 @@
                 avatar
                 v-for="item in $store.getters.getMoreItems"
                 :key="item.title"
-                @click="">
+                @click="moreActions(item.name, contact.id)">
                 <v-list-tile-avatar>
                   <v-icon>
                     {{ item.icon }}
@@ -142,7 +162,6 @@
                 </v-list-tile-title>
               </v-list-tile>
             </v-list>
-
           </v-menu>
         </v-tooltip>
 
@@ -179,12 +198,32 @@
           <v-avatar
             size="70px"
             class="mr-3"
+            @click="openSlim"
+            @mouseenter="avatar_hover = true"
+            @mouseleave="avatar_hover = false"
+            :style="{
+                    cursor: 'pointer',
+                    backgroundSize: 'contain',
+                    backgroundColor: 'white',
+                    backgroundImage: contact.avatar ? `url(${contact.avatar})` : 'url(https://ssl.gstatic.com/s2/oz/images/sge/grey_silhouette.png)',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'center center',
+                    border: '5px solid #E3E3DE'
+                  }"
           >
-            <img
-              :src="contact.avatar"
-              :style="{border: '5px solid #E3E3DE'}"
-              alt="`${contact.name}'s avatar`"
+            <v-btn
+              fab
+              color="black"
+              class="ma-0"
+              :style="{opacity: avatar_hover ? '0.5' : '0'}"
             >
+              <v-icon
+                color="white"
+                large
+              >
+                photo_camera
+              </v-icon>
+            </v-btn>
           </v-avatar>
 
           <span
@@ -215,8 +254,9 @@
           :key="item.icon"
           :style="{maxHeight: '60px'}"
         >
+          <!--TODO add dateOfBirth to iterableContactDetails-->
           <v-list-tile-avatar
-            class="mr-3 pt-1"
+            class="mr-3 pt-0"
           >
             <v-icon>
               {{ item.icon }}
@@ -226,7 +266,7 @@
             <v-list
               v-for="(detail, index) in item.details"
               :key="index"
-              class="pb-1"
+              class="pb-0"
             >
               <v-list-tile-sub-title
                 v-html="detail">
@@ -244,20 +284,74 @@
     name: "view-contact",
     data: () => {
       return {
+        avatar_hover: false,
+        temp_contact: {
+          id:null,
+          fullName: "",
+          avatar: "",
+          emails: [],
+          phones: [],
+          addresses: [],
+          starred: false,
+          hidden: false
+        }
       }
     },
+
     methods: {
+      openSlim: function() {
+        if (this.contact.avatar) {
+          this.$store.state.slim.instance.load(this.contact.avatar, (error, data) => {
+            if (error) {
+              this.$store.dispatch('setSnackbar', {
+                color: 'info',
+                message: 'Unable to automatically load your avatar. Proceed with manual upload.'
+              });
+            }
+          });
+        }
+        this.$store.dispatch('setSlim', {contact: this.contact});
+      },
+
       toggleView: function() {
         this.$store.dispatch('setViewTransition', 'dialog-transition');
-        this.$store.dispatch('toggleViewContact')
+        this.$store.dispatch('toggleViewContact');
       },
+
       toggleEdit: function(id) {
         this.$store.dispatch('toggleEditContact');
+        this.$nextTick(() => {
+          this.$parent.$refs.edit_contact_dialog.$refs.fullName.focus();
+        });
+      },
+
+      toggleDelete: function() {
+        this.$store.dispatch('toggleDeleteContact');
+      },
+
+      hideContact: function() {
+        //TODO implement this functionality
+      },
+
+      moreActions: function(item_name, id) {
+        switch(item_name) {
+          case 'Delete':
+            this.toggleDelete(id);
+            break;
+          case 'Hide':
+            this.hideContact(id);
+            break;
+        }
       }
     },
+
     computed: {
       contact: function() {
-        return this.$store.getters.getActiveContact || {};
+        const contact = this.$store.getters.getActiveContact;
+        if (this.$store.state.edit_contact) {
+          this.temp_contact = JSON.parse(JSON.stringify(contact));
+        }
+        return contact || this.temp_contact;
       },
       iterableContactDetails: function() {
         if (this.contact.hasOwnProperty('id')){

@@ -29,15 +29,16 @@
         :disabled="$store.state.tooltips"
       >
         <span>Search</span>
-      <v-btn
-        flat
-        icon
-        @click="$store.dispatch('toggleSearch')"
-      >
-        <v-icon>
-          search
-        </v-icon>
-      </v-btn>
+        <v-btn
+          flat
+          icon
+          slot="activator"
+          @click="toggleSearch"
+        >
+          <v-icon>
+            search
+          </v-icon>
+        </v-btn>
       </v-tooltip>
 
       <div class="d-flex align-center" style="margin-left: auto">
@@ -58,12 +59,15 @@
   export default {
     name: "main-toolbar",
     data: () => {
-      return {
-      }
-    },
-    components: {
+      return {}
     },
     methods: {
+      toggleSearch: function() {
+       this.$store.dispatch('toggleSearch');
+       this.$nextTick(() => {
+         $('#search').focus();
+       });
+      }
     }
   }
 </script>

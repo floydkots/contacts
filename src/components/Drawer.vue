@@ -25,7 +25,10 @@
         </v-layout>
 
         <v-list-group v-else-if="item.children" v-model="item.model" no-action>
-          <v-list-tile slot="item" @click="">
+          <v-list-tile
+            slot="item"
+            @click=""
+          >
             <v-list-tile-action>
               <v-icon>{{ item.model ? item.icon : item['icon-alt'] }}</v-icon>
             </v-list-tile-action>
@@ -35,6 +38,7 @@
               </v-list-tile-title>
             </v-list-tile-content>
           </v-list-tile>
+
           <v-list-tile
             v-for="(child, i) in item.children"
             :key="i"
@@ -51,13 +55,25 @@
           </v-list-tile>
         </v-list-group>
 
-        <v-list-tile v-else @click="">
+        <v-divider
+          v-else-if="item.divider"
+          v-bind:inset="item.inset"
+          class="mt-1 mb-1"
+        >
+        </v-divider>
+
+        <v-list-tile
+          v-else
+          :to="item.route ? item.route : null"
+          :exact="true"
+          @click=""
+        >
           <v-list-tile-action>
             <v-icon>{{ item.icon }}</v-icon>
           </v-list-tile-action>
           <v-list-tile-content>
             <v-list-tile-title>
-              {{ item.text }}
+              {{ item.text  === 'Contacts' ? `${item.text} (${numOfContacts})` : `${item.text}`}}
             </v-list-tile-title>
           </v-list-tile-content>
         </v-list-tile>
@@ -70,19 +86,28 @@
   export default {
     name: "drawer",
     data: () => ({
+      numOfContacts: 0,
       items: [
-        {icon: 'contacts', text: 'Contacts'},
-        {icon: 'history', text:'Frequently contacted'},
-        {icon: 'content-copy', text: 'Duplicates'},
+        {
+          icon: 'contacts', text: 'Contacts', route: '/'
+        },
+        {icon: 'history', text:'Frequently accessed', route: '/frequent'},
+        {icon: 'content_copy', text: 'Duplicates', route: '/merge'},
+
+        {divider: true, inset: false},
+
         {
           icon: 'keyboard_arrow_up',
           'icon-alt': 'keyboard_arrow_down',
           text: 'Labels',
-          model: true,
+          model: false,
           children: [
             {icon: 'add', text: 'Create label'}
           ]
         },
+
+        {divider: true, inset: false},
+
         {
           icon: 'keyboard_arrow_up',
           'icon-alt': 'keyboard_arrow_down',
@@ -96,13 +121,17 @@
             {text: 'Other contacts'}
           ]
         },
+
+        {divider: true, inset: false},
+
         {icon: 'settings', text: 'Settings'},
         {icon: 'chat_bubble', text: 'Send feedback'},
         {icon: 'help', text: 'Help'},
-        {icon: 'phonelink', text: 'App downloads'},
-        {icon: 'keyboard', text: 'Go to the old version'}
       ]
-    })
+    }),
+    beforeUpdate () {
+      this.numOfContacts = this.$store.getters.getContacts.length;
+    }
   }
 </script>
 
