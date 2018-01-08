@@ -32,42 +32,42 @@
 </template>
 
 <script>
-  import { deleteContact } from "../api/database";
+  import { deleteContact } from '../api/database'
 
   export default {
-    name: "delete-contact",
+    name: 'delete-contact',
     methods: {
-      toggleDelete: function() {
-        this.$store.dispatch('toggleDeleteContact');
+      toggleDelete: function () {
+        this.$store.dispatch('toggleDeleteContact')
       },
 
-      deleteContact: function() {
+      deleteContact: function () {
         this.$store.dispatch('setSnackbar', {
           color: 'info',
           message: 'Deleting contact...'
-        });
-        let contact_id = this.$store.getters.getActiveId;
+        })
+        let contactId = this.$store.getters.getActiveId
         const deleteCallback = (error) => {
-          let snackbar = {};
+          let snackbar = {}
           if (error) {
             snackbar = {
               color: 'error',
-              message:`${error}`,
-            };
+              message: `${error}`
+            }
           } else {
             snackbar = {
               color: 'success',
-              message: 'Contact deleted successfully!',
-            };
+              message: 'Contact deleted successfully!'
+            }
           }
-          this.$store.dispatch('setSnackbar', snackbar);
-        };
-        deleteContact(contact_id, deleteCallback);
-        this.toggleDelete();
-        if (this.$store.state.view_contact) this.$store.dispatch('toggleViewContact');
+          this.$store.dispatch('setSnackbar', snackbar)
         }
+        deleteContact(contactId, deleteCallback)
+        this.toggleDelete()
+        if (this.$store.state.view_contact) this.$store.dispatch('toggleViewContact')
       }
     }
+  }
 </script>
 
 <style scoped>

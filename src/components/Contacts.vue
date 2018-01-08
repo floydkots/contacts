@@ -48,12 +48,12 @@
             >
               <img
                 v-if="props.item.avatar"
-                :src="props.item.avatar"
+                :src="props.item.avatar.thumbnail || props.item.avatar.avatar"
                 alt="avatar"
               >
               <span
                 v-else
-                class="white--text headline"
+                class="headline white--text "
               >
                 {{props.item.fullName.slice(0, 1).toUpperCase()}}
               </span>
@@ -211,17 +211,17 @@ opacity: hover === props.item.id ? 1 : 0}"
 </template>
 
 <script>
-  import EditContact from './EditContact.vue';
-  import ViewContact from './ViewContact.vue';
-  import DeleteContact from './DeleteContact.vue';
+  import EditContact from './EditContact.vue'
+  import ViewContact from './ViewContact.vue'
+  import DeleteContact from './DeleteContact.vue'
 
   export default {
-    name: "contacts",
-    data() {
+    name: 'contacts',
+    data () {
       return {
         last_clicked: null,
         icon: false,
-        hover: null,
+        hover: null
       }
     },
 
@@ -232,49 +232,49 @@ opacity: hover === props.item.id ? 1 : 0}"
     },
 
     methods: {
-      hideContact: function(id) {
-        //TODO implement this functionality
+      hideContact: function (id) {
+        // TODO implement this functionality
       },
 
-      toggleView: function(id) {
-        this.$store.dispatch('setActiveId', id);
-        this.$store.dispatch('toggleViewContact');
+      toggleView: function (id) {
+        this.$store.dispatch('setActiveId', id)
+        this.$store.dispatch('toggleViewContact')
       },
 
-      toggleEdit: function(id) {
-        this.$store.dispatch('setActiveId', id);
-        this.$store.dispatch('toggleEditContact');
+      toggleEdit: function (id) {
+        this.$store.dispatch('setActiveId', id)
+        this.$store.dispatch('toggleEditContact')
         this.$nextTick(() => {
-          this.$refs.edit_contact_dialog.$refs.fullName.focus();
-        });
+          this.$refs.edit_contact_dialog.$refs.fullName.focus()
+        })
       },
 
-      toggleDelete: function(id) {
-        this.$store.dispatch('setActiveId', id);
-        this.$store.dispatch('toggleDeleteContact');
+      toggleDelete: function (id) {
+        this.$store.dispatch('setActiveId', id)
+        this.$store.dispatch('toggleDeleteContact')
       },
 
-      moreActions: function(item_name, id) {
-        switch(item_name) {
+      moreActions: function (itemName, id) {
+        switch (itemName) {
           case 'Delete':
-            this.toggleDelete(id);
-            break;
+            this.toggleDelete(id)
+            break
           case 'Hide':
-            this.hideContact(id);
-            break;
+            this.hideContact(id)
+            break
         }
       }
     },
     computed: {
       selected: {
-        get: function() {
-          return this.$store.getters.getSelected;
+        get: function () {
+          return this.$store.getters.getSelected
         },
-        set: function(newSelected) {
+        set: function (newSelected) {
           this.$store.dispatch('setSelected', newSelected)
         }
       }
-    },
+    }
   }
 </script>
 

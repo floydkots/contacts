@@ -8,7 +8,7 @@
       >
         <v-layout row>
           <v-flex xs12>
-            <contacts></contacts>
+            <contacts/>
           </v-flex>
         </v-layout>
       </v-container>
@@ -35,7 +35,6 @@
 </template>
 
 <script>
-
   import Contacts from './Contacts.vue'
   import AddContact from './AddContact.vue'
 
@@ -44,17 +43,17 @@
 
     }),
     methods: {
-      toggleAddContact: function() {
-        this.$store.dispatch('toggleAddContact');
+      toggleAddContact: function () {
+        this.$store.dispatch('toggleAddContact')
         this.$nextTick(() => {
-          this.$refs.add_contact_dialog.$refs.fullName.focus();
-        });
+          this.$refs.add_contact_dialog.$refs.fullName.focus()
+        })
       }
     },
 
     components: {
       AddContact,
       Contacts
-    },
+    }
   }
 </script>

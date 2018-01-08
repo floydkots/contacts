@@ -55,9 +55,9 @@
 </template>
 
 <script>
-  import firebase from 'firebase';
-  import { avatarsRef, saveContact } from "../api/database";
-  import Slim from '../../public/js/slim.module';
+  import firebase from 'firebase'
+  import { avatarsRef, saveContact } from '../api/database'
+  import Slim from '../../src/assets/js/slim.module'
 
   export default {
     name: 'slim-cropper',
@@ -70,6 +70,7 @@
         options: {
           ratio: '1:1',
           initialImage: '',
+          minSize: '100, 100',
           service: this.slimService,
           didInit: this.slimInit,
           didLoad: this.slimLoaded,
@@ -77,9 +78,9 @@
           didUpload: this.slimUploaded,
           label: `Drop your avatar here. Or click to select.`,
           statusUploadSuccess: 'Avatar Uploaded successfully.',
-          maxFileSize: 0.5,
+          maxFileSize: 2,
           serviceFormat: 'file',
-          instantEdit: false,
+          instantEdit: false
         }
       }
     },
@@ -87,155 +88,215 @@
     props: ['state'],
 
     methods: {
-      cancelSlim: function() {
+      cancelSlim: function () {
         if (this.$store.state.slim) {
-          this.slim.remove();
+          this.slim.remove()
         }
         if (this.$store.state.add_contact) {
-          this.setAvatar('');
+          this.setAvatar({})
         } else if (this.$store.state.view_contact) {
           // Do something
         }
 
-        this.avatar_ready = false;
-        this.$store.dispatch('setSlim', {active: false});
+        this.avatar_ready = false
+        this.$store.dispatch('setSlim', {active: false})
       },
 
-      doneSlim: function() {
-        if (this.avatar_removed) this.setAvatar("");
-        if (this.$store.state.view_contact) {
-          this.updateContact();
+      doneSlim: function () {
+        if (this.avatar_removed) {
+          this.setAvatar({})
+        } else {
+          this.$store.dispatch('setSnackbar', {
+            color: 'info',
+            message: 'Updating avatar thumbnail...'
+          })
+          let avatar = this.$store.state.slim.contact.avatar
+          this.getThumbnail(avatar.filename)
+            .then(thumbnailURL => {
+              this.setAvatar({thumbnail: thumbnailURL})
+              console.log('doneSlim: Successfully added thumbnail')
+              this.$store.dispatch('setSnackbar', {
+                color: 'success',
+                message: 'Successfully updated avatar thumbnail'
+              })
+            })
+            .catch(error => {
+              this.$store.dispatch('setSnackbar', {
+                color: 'error',
+                message: 'Unable to retrieve thumbnail. Error was logged in the console'
+              })
+              console.log('doneSlim:', error)
+              if (this.$store.state.view_contact) {
+                this.updateContact()
+              }
+            })
         }
-        this.slim.remove();
-        this.avatar_ready = false;
-        this.$store.dispatch('setSlim', {active: false});
+        this.slim.remove()
+        this.avatar_ready = false
+        this.$store.dispatch('setSlim', {active: false})
       },
 
-      updateContact: function() {
+      updateContact: function () {
         this.$store.dispatch('setSnackbar', {
           color: 'info',
-          message: 'Updating contact...',
-        });
-        let my_this = this;
-        function saveCallback(error) {
-          let snackbar = {};
+          message: 'Updating contact...'
+        })
+        let myThis = this
+        function saveCallback (error) {
+          let snackbar = {}
           if (error) {
             snackbar = {
               color: 'error',
-              message:`${error}`,
-            };
+              message: `${error}`
+            }
           } else {
             snackbar = {
               color: 'success',
-              message: 'Contact updated successfully!',
-            };
+              message: 'Contact updated successfully!'
+            }
           }
-          my_this.$store.dispatch('setSnackbar', snackbar);
+          myThis.$store.dispatch('setSnackbar', snackbar)
         }
-        saveContact(this.$store.state.slim.contact, saveCallback);
+        saveContact(this.$store.state.slim.contact, saveCallback)
       },
-
-      setAvatar: function(avatar) {
+      getThumbnail: function (avatarFilename) {
+        return new Promise(function (resolve, reject) {
+          avatarsRef.child(`avatars/thumb_${avatarFilename}`)
+            .getDownloadURL()
+            .then(url => {
+              console.log('getThumbnail: Successfully retrieved thumbnail')
+              resolve(url)
+            })
+            .catch(error => {
+              console.log('getThumbnail: Unable to retrieve thumbnail', error)
+              reject(error)
+            })
+        })
+      },
+      setAvatar: function (avatarObject) {
+        let {avatar = '', thumbnail = '', filename = ''} = avatarObject
+        let removal = !(avatar || thumbnail || filename)
         if (this.$store.state.add_contact) {
-          let new_contact = this.$store.state.new_contact;
-          new_contact.avatar = avatar;
-          this.$store.dispatch('setNewContact', new_contact);
+          let newContact = this.$store.state.new_contact
+          if (removal) {
+            newContact.avatar = null
+          } else {
+            if (!newContact.avatar) newContact['avatar'] = {avatar: '', thumbnail: '', filename: ''}
+            if (avatar) newContact.avatar['avatar'] = avatar
+            if (filename) newContact.avatar['filename'] = filename
+            if (thumbnail) newContact.avatar['thumbnail'] = thumbnail
+          }
+          this.$store.dispatch('setNewContact', newContact)
+          console.log('setAvatar: Successfully set newContact')
         } else if (this.$store.state.edit_contact || this.$store.state.view_contact) {
-          let contact = this.$store.state.slim.contact;
-          contact.avatar = avatar;
+          let contact = this.$store.state.slim.contact
+          if (removal) {
+            contact.avatar = null
+          } else {
+            if (!contact.avatar) contact['avatar'] = {avatar: '', thumbnail: '', filename: ''}
+            if (avatar) contact.avatar['avatar'] = avatar
+            if (thumbnail) contact.avatar['thumbnail'] = thumbnail
+            if (filename) contact.avatar['filename'] = filename
+          }
+          if (this.$store.state.view_contact) {
+            this.updateContact()
+          }
+          console.log('setAvatar: Successfully updated contact')
         }
       },
-
-      slimLoaded: function(file, image, meta) {
-        this.avatar_ready = false;
-        return true;
+      slimLoaded: function (file, image, meta) {
+        this.avatar_ready = false
+        return true
       },
-
-      slimRemoved: function(data) {
+      slimRemoved: function (data) {
         if (this.$store.state.edit_contact || this.$store.state.view_contact) {
-          this.avatar_removed = true;
-          this.avatar_ready = true;
+          this.avatar_removed = true
+          this.avatar_ready = true
         }
         if (!this.$store.state.slim.contact.avatar) {
-          this.avatar_ready = false;
+          this.avatar_ready = false
         }
       },
 
-      slimUploaded: function(error, data, response) {
-        this.avatar_ready = !error;
+      slimUploaded: function (error, data, response) {
+        this.avatar_ready = !error
+        this.avatar_removed = false
       },
       // called when slim has initialized
       slimInit: function (data, slim) {
-        //slim instance reference
-        this.$store.dispatch('setSlim', {active: false, instance: slim});
+        // slim instance reference
+        this.$store.dispatch('setSlim', {active: false, instance: slim})
 
-        //current slim data object and slim reference
-        //console.log(data);
+        // current slim data object and slim reference
+        // console.log(data)
       },
 
       // called when upload button is pressed or                 // automatically if push is enabled
       slimService: function (file, progress, success, failure) {
-        this.$store.dispatch('setSnackbar', {color: 'info', message: 'Uploading avatar...'});
-        file = file[0];
-        let my_this = this;
-        // console.log('this in Slim.vue: ', this);
+        this.$store.dispatch('setSnackbar', {color: 'info', message: 'Uploading avatar...'})
+        file = file[0]
+        let myThis = this
+        // console.log('this in Slim.vue: ', this)
         // Upload file to the object
-        let timestamp = Date.now();
-        let uploadTask = avatarsRef.child('avatars/' + `${file.name}-${timestamp}`).put(file);
+        const timestamp = Date.now()
+        const filename = `${file.name}-${timestamp}`
+        let avatarUploadTask = avatarsRef.child('avatars/' + filename).put(file)
 
         // Listen for state changes, errors, and completion of the upload.
-        uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, function(snapshot) {
+        avatarUploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, function (snapshot) {
           // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded.
-          progress(snapshot.bytesTransferred, snapshot.totalBytes);
+          progress(snapshot.bytesTransferred, snapshot.totalBytes)
           switch (snapshot.state) {
             case firebase.storage.TaskState.PAUSED:
-              // console.log('Upload is paused');
-              break;
+              // console.log('Upload is paused')
+              break
             case firebase.storage.TaskState.RUNNING:
-              // console.log('Upload is running');
-              break;
+              // console.log('Upload is running')
+              break
           }
-        }, function(error) {
-          switch(error.code) {
+        }, function (error) {
+          switch (error.code) {
             case 'storage/unauthorized':
               // User doesn't have permission to access the object
-              failure('You do not have permission to access the object.');
-              my_this.$store.dispatch('setSnackbar', {
+              failure('You do not have permission to access the object.')
+              myThis.$store.dispatch('setSnackbar', {
                 color: 'error',
                 message: 'You do not have permission to access the object.'
-              });
-              break;
+              })
+              break
 
             case 'storage/canceled':
               // User canceled the upload
-              failure('The update was cancelled.');
-              my_this.$store.dispatch('setSnackbar', {
+              failure('The update was cancelled.')
+              myThis.$store.dispatch('setSnackbar', {
                 color: 'error',
                 message: 'The update was cancelled.'
-              });
-              break;
+              })
+              break
 
             case 'storage/unknown':
               // Unknown error occurred, inspect error.serverResponse
-              failure('An unknown error occurred.');
-              my_this.$store.dispatch('setSnackbar', {
+              failure('An unknown error occurred.')
+              myThis.$store.dispatch('setSnackbar', {
                 color: 'error',
                 message: 'An unknown error occurred.'
-              });
-              break;
+              })
+              break
           }
-        }, function() {
+        }, function () {
           // Upload completed successfully, now we can get the download URL
-          success('Avatar uploaded successfully.');
-          const downloadURL = uploadTask.snapshot.downloadURL;
-          my_this.setAvatar(downloadURL);
-          my_this.$store.dispatch('setSnackbar', {color: 'success', message: 'Avatar uploaded successfully.'})
-        });
+          success('Avatar uploaded successfully.')
+          const downloadURL = avatarUploadTask.snapshot.downloadURL
+          // Thumbnail is generated upon upload via a firebase function and
+          // the prefix 'thumb_' added to the name of the file
+          myThis.setAvatar({avatar: downloadURL, filename: filename})
+          myThis.$store.dispatch('setSnackbar', {color: 'success', message: 'Avatar uploaded successfully.'})
+        })
       }
     },
 
-    mounted() {
-      this.slim = new Slim(this.$refs['cropper'], this.options);
+    mounted () {
+      this.slim = new Slim(this.$refs['cropper'], this.options)
     },
 
     destroyed: function () {
@@ -244,5 +305,5 @@
   }
 </script>
 <style lang="css">
-  @import "../../public/css/slim.min.css";
+  @import '../../src/assets/css/slim.min.css';
 </style>

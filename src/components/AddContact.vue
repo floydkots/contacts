@@ -42,7 +42,7 @@
                     cursor: 'pointer',
                     backgroundSize: 'contain',
                     backgroundColor: 'white',
-                    backgroundImage: avatar ? `url(${avatar})` : 'url(https://ssl.gstatic.com/s2/oz/images/sge/grey_silhouette.png)',
+                    backgroundImage: avatar ? `url(${avatar.avatar})` : 'url(../../static/avatars/grey_silhouette.png)',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center center',
                     border: '2px solid #E3E3DE'
@@ -600,14 +600,18 @@
 </template>
 
 <script>
+  import $ from 'jquery'
+  import { saveContact } from '../api/database'
 
-  import { saveContact } from "../api/database";
+  const Modernizr = require('../../src/assets/js/modernizr-custom')
+  require('intl-tel-input')
+
   export default {
-    name: "add-contact",
+    name: 'add-contact',
     data: () => {
       return {
         menu: false,
-        labels: ["Home", "Work", "Other"],
+        labels: ['Home', 'Work', 'Other'],
         avatar_hover: false,
         newAddressId: 0,
         newPhoneId: 0,
@@ -617,15 +621,15 @@
         currentAddressHover: null,
         currentPhoneHover: null,
         currentEmailHover: null,
-        avatar: "",
-        fullName: "",
+        avatar: {avatar: '', thumbnail: '', filename: ''},
+        fullName: '',
         dateOfBirth: null,
-        addresses: [{id: 0, value:"", label:""}],
-        phones: [{id: 0, value:"", label:""}],
-        emails: [{id: 0, value:"", label:""}],
+        addresses: [{id: 0, value: '', label: ''}],
+        phones: [{id: 0, value: '', label: ''}],
+        emails: [{id: 0, value: '', label: ''}],
         fullNameRules: [
           (v) => !!v || 'Full Name is required',
-          (v) => v && v.split(" ").length > 1 && v.split(" ")[1].length > 0 || 'Full Name must have at least 2 names'
+          (v) => (v && v.split(' ').length > 1 && v.split(' ')[1].length > 0) || 'Full Name must have at least 2 names'
         ],
         dateOfBirthRules: [
           (v) => !!v || 'Date of Birth is required'
@@ -635,7 +639,7 @@
         ],
         emailRules: [
           (v) => !!v || 'Email is required',
-          (v) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid'
+          (v) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid'
         ]
       }
     },
@@ -644,204 +648,207 @@
     },
 
     computed: {
-      new_contact: function() {
-        return this.$store.getters.getNewContact;
+      new_contact: function () {
+        return this.$store.getters.getNewContact
       }
     },
 
     methods: {
-      openSlim: function() {
-        this.$store.dispatch('setSlim', {contact: this.$store.state.new_contact});
+      openSlim: function () {
+        this.$store.dispatch('setSlim', {contact: this.$store.state.new_contact})
       },
-      addAddress: function() {
+      addAddress: function () {
         this.addresses.push({
           id: ++this.newAddressId,
-          value: "",
-          label: ""
-        });
+          value: '',
+          label: ''
+        })
       },
-      addPhone: function() {
+      addPhone: function () {
         this.phones.push({
           id: ++this.newPhoneId,
-          value: "",
-          label: ""
+          value: '',
+          label: ''
         })
       },
-      addEmail: function() {
+      addEmail: function () {
         this.emails.push({
           id: ++this.newEmailId,
-          value: "",
-          label: ""
+          value: '',
+          label: ''
         })
       },
-      removeAvatar: function() {
-        let new_contact = this.$store.state.new_contact;
-        new_contact.avatar = '';
-        this.$store.dispatch('setNewContact', new_contact);
+      removeAvatar: function () {
+        let newContact = this.$store.state.new_contact
+        newContact.avatar = null
+        this.$store.dispatch('setNewContact', newContact)
       },
-      removeFullName: function() {
-        this.fullName = "";
-        this.$refs.fullName.reset();
+      removeFullName: function () {
+        this.fullName = ''
+        this.$refs.fullName.reset()
       },
-      removeDateOfBirth: function() {
-        this.dateOfBirth = null;
-        this.$refs.dateOfBirth.reset();
+      removeDateOfBirth: function () {
+        this.dateOfBirth = null
+        this.$refs.dateOfBirth.reset()
       },
-      removeAddress: function(address) {
+      removeAddress: function (address) {
         if (this.addresses.length > 1) {
           this.addresses = this.addresses.filter(
             (currentAddress) => {
-              return currentAddress.id !== address.id;
+              return currentAddress.id !== address.id
             })
         } else {
-          address.value = "";
-          address.label = "";
+          address.value = ''
+          address.label = ''
         }
       },
-      removePhone: function(phone) {
+      removeAddresses: function () {
+        this.addresses = [{id: 0, value: '', label: ''}]
+      },
+      removePhone: function (phone) {
         if (this.phones.length > 1) {
           this.phones = this.phones.filter(
             (currentPhone) => {
-              return currentPhone.id !== phone.id;
+              return currentPhone.id !== phone.id
             }
           )
         } else {
-          phone.value = "";
-          phone.label = "";
-          let phone_refs = this.$refs[`phone_${phone.id}`];
-          if (phone_refs && phone_refs.length > 0) {
-            for (let phone_ref of phone_refs) {
-              phone_ref.reset();
+          phone.value = ''
+          phone.label = ''
+          let phoneRefs = this.$refs[`phone_${phone.id}`]
+          if (phoneRefs && phoneRefs.length > 0) {
+            for (let phoneRef of phoneRefs) {
+              phoneRef.reset()
             }
           }
         }
       },
-      removeEmail: function(email) {
+      removePhones: function () {
+        this.phones = [{id: 0, value: '', label: ''}]
+      },
+      removeEmail: function (email) {
         if (this.emails.length > 1) {
           this.emails = this.emails.filter(
             (currentEmail) => {
-              return currentEmail.id !== email.id;
+              return currentEmail.id !== email.id
             }
           )
         } else {
-          email.value = "";
-          email.label = "";
-          let email_refs = this.$refs[`email_${email.id}`];
-          if (email_refs && email_refs.length > 0) {
-            for (let email_ref of email_refs) {
-              email_ref.reset();
+          email.value = ''
+          email.label = ''
+          let emailRefs = this.$refs[`email_${email.id}`]
+          if (emailRefs && emailRefs.length > 0) {
+            for (let emailRef of emailRefs) {
+              emailRef.reset()
             }
           }
         }
       },
-      clearAddContact: function() {
-        this.removeAvatar();
-        this.removeFullName();
-        this.removeDateOfBirth();
-        for (let address of this.addresses) {
-          this.removeAddress(address);
-        }
-        for (let phone of this.phones) {
-          this.removePhone(phone);
-        }
-        for (let email of this.emails) {
-          this.removeEmail(email);
-        }
+      removeEmails: function () {
+        this.emails = [{id: 0, value: '', label: ''}]
       },
-      closeAddContact: function() {
-        this.clearAddContact();
+      clearAddContact: function () {
+        this.removeAvatar()
+        this.removeFullName()
+        this.removeDateOfBirth()
+        this.removeAddresses()
+        this.removePhones()
+        this.removeEmails()
+      },
+      closeAddContact: function () {
+        this.clearAddContact()
         this.$store.dispatch('toggleAddContact')
       },
-      showAddressAdd: function(address) {
-        return address.id === this.addresses[this.addresses.length - 1].id && !!address.value;
+      showAddressAdd: function (address) {
+        return address.id === this.addresses[this.addresses.length - 1].id && !!address.value
       },
-      showPhoneAdd: function(phone) {
-        return phone.id === this.phones[this.phones.length - 1].id && !!phone.value;
+      showPhoneAdd: function (phone) {
+        return phone.id === this.phones[this.phones.length - 1].id && !!phone.value
       },
-      showEmailAdd: function(email) {
-        return email.id === this.emails[this.emails.length - 1].id && !!email.value;
+      showEmailAdd: function (email) {
+        return email.id === this.emails[this.emails.length - 1].id && !!email.value
       },
-      showAddressIcon: function(id) {
-        return id === this.addresses[0].id;
+      showAddressIcon: function (id) {
+        return id === this.addresses[0].id
       },
-      showPhoneIcon: function(id) {
-        return id === this.phones[0].id;
+      showPhoneIcon: function (id) {
+        return id === this.phones[0].id
       },
-      showEmailIcon: function(id) {
-        return id === this.emails[0].id;
+      showEmailIcon: function (id) {
+        return id === this.emails[0].id
       },
-      showFullNameRemove: function() {
-        return !!this.fullName && (Modernizr.touchevents ? true : this.fullNameHover);
+      showFullNameRemove: function () {
+        return !!this.fullName && (Modernizr.touchevents ? true : this.fullNameHover)
       },
-      showDateOfBirthRemove: function() {
-        return !!this.dateOfBirth && (Modernizr.touchevents ? true : this.dateOfBirthHover);
+      showDateOfBirthRemove: function () {
+        return !!this.dateOfBirth && (Modernizr.touchevents ? true : this.dateOfBirthHover)
       },
-      showAddressRemove: function(address) {
-        return this.currentAddressHover === address.id && !!address.value;
+      showAddressRemove: function (address) {
+        return this.currentAddressHover === address.id && !!address.value
       },
-      showPhoneRemove: function(phone) {
-        return this.currentPhoneHover === phone.id && !!phone.value;
+      showPhoneRemove: function (phone) {
+        return this.currentPhoneHover === phone.id && !!phone.value
       },
-      showEmailRemove: function(email) {
-        return this.currentEmailHover === email.id && !!email.value;
+      showEmailRemove: function (email) {
+        return this.currentEmailHover === email.id && !!email.value
       },
-      getNewId: function() {
+      getNewId: function () {
         if (this.$store.state.contacts.length > 0) {
-          return ++this.$store.state.contacts.slice(-1)[0].id;
+          let contacts = this.$store.state.contacts
+          let newId = Math.max(...contacts.map(contact => { return contact.id }))
+          return newId + 1
         }
-        return 0;
+        return 0
       },
-      validEntries: function() {
-        let fullName = false;
+      validEntries: function () {
+        let fullName = false
         if (this.$refs.fullName) {
-          fullName = this.$refs.fullName.valid;
+          fullName = this.$refs.fullName.valid
         }
 
-        let dateOfBirth = false;
-        if (this.$refs.dateOfBirth ) {
-          dateOfBirth = this.$refs.dateOfBirth.valid;
+        let dateOfBirth = false
+        if (this.$refs.dateOfBirth) {
+          dateOfBirth = this.$refs.dateOfBirth.valid
         }
 
         const addresses = () => {
           for (const address of this.$refs.addresses) {
             if (!address.valid) {
-              return false;
+              return false
             }
           }
-          return true;
-        };
-
+          return true
+        }
         let phones = () => {
           for (const phone of this.phones) {
             if (phone.id !== null && phone.id !== undefined) {
               if (!(this.$refs[`phone_${phone.id}`] && this.$refs[`phone_${phone.id}`][0].valid)) {
-                return false;
+                return false
               }
             }
           }
-          return !!this.phones[0].value;
-        };
-
+          return !!this.phones[0].value
+        }
         let emails = () => {
           for (const email of this.emails) {
             if (email.id !== null && email.id !== undefined) {
               if (!(this.$refs[`email_${email.id}`] && this.$refs[`email_${email.id}`][0].valid)) {
-                return false;
+                return false
               }
             }
           }
-          return !!this.emails[0].value;
-        };
+          return !!this.emails[0].value
+        }
 
-        return (fullName && dateOfBirth && addresses() && phones() && emails());
+        return (fullName && dateOfBirth && addresses() && phones() && emails())
       },
-      saveContact: function() {
-        let my_this = this;
+      saveContact: function () {
+        let myThis = this
         if (this.validEntries()) {
           this.$store.dispatch('setSnackbar', {
             color: 'info',
-            message: 'Saving contact...',
-          });
+            message: 'Saving contact...'
+          })
           let contactToSave = {
             id: this.getNewId(),
             fullName: this.fullName,
@@ -852,91 +859,88 @@
             addresses: this.addresses,
             starred: false,
             hidden: false
-          };
-          function saveCallback(error) {
-            let snackbar = {};
+          }
+          const saveCallback = function (error) {
+            let snackbar = {}
             if (error) {
               snackbar = {
                 color: 'error',
-                message:`${error}`,
-              };
+                message: `${error}`
+              }
             } else {
               snackbar = {
                 color: 'success',
-                message: 'Contact saved successfully!',
-              };
+                message: 'Contact saved successfully!'
+              }
             }
-            my_this.$store.dispatch('setSnackbar', snackbar);
+            myThis.$store.dispatch('setSnackbar', snackbar)
           }
-          saveContact(contactToSave, saveCallback);
-          this.closeAddContact();
+          saveContact(contactToSave, saveCallback)
+          this.closeAddContact()
         } else {
           this.$store.dispatch('setSnackbar', {
             color: 'error',
             message: 'There were errors. Correct and resubmit'
           })
         }
-
       }
     },
-    beforeUpdate() {
-      this.avatar = this.new_contact.avatar;
+    beforeUpdate () {
+      this.avatar = this.new_contact.avatar
     },
 
-    mounted() {
-      this.fullName = this.new_contact.fullName;
-      this.dateOfBirth = this.new_contact.dateOfBirth;
-      this.addresses = this.new_contact.addresses;
-      this.phones = this.new_contact.phones;
-      this.emails = this.new_contact.emails;
+    mounted () {
+      this.fullName = this.new_contact.fullName
+      this.dateOfBirth = this.new_contact.dateOfBirth
+      this.addresses = this.new_contact.addresses
+      this.phones = this.new_contact.phones
+      this.emails = this.new_contact.emails
     },
 
-    updated() {
-      let instance = this;
-      let cookie = this.$cookie;
-      let phones = this.phones;
-      let country_code = cookie.get('countryCode') || "";
-      $("div[id^='country_']").each(function() {
-        const phone_id = $(this).attr('id').split('_')[1];
-        const country_select = $(this);
-        country_select.intlTelInput({
-          preferredCountries: [country_code],
-          utilsScript: "../../public/js/utils.js",
-          initialCountry: "auto",
-          geoIpLookup: function(callback) {
-            if (country_code !== null && country_code !== "") {
-              callback(country_code);
-              instance.$nextTick(function() {
-                country_select.intlTelInput("setCountry", country_code);
-              });
+    updated () {
+      let instance = this
+      let cookie = this.$cookie
+      let phones = this.phones
+      let countryCode = cookie.get('countryCode') || ''
+      $("div[id^='country_']").each(function () {
+        const phoneId = $(this).attr('id').split('_')[1]
+        const countrySelect = $(this)
+        countrySelect.intlTelInput({
+          preferredCountries: [countryCode],
+          initialCountry: 'auto',
+          geoIpLookup: function (callback) {
+            if (countryCode !== null && countryCode !== '') {
+              callback(countryCode)
+              instance.$nextTick(function () {
+                countrySelect.intlTelInput('setCountry', countryCode)
+              })
             } else {
-              $.get("https://ipinfo.io", function() {}, "jsonp")
-                .always(function(resp) {
-                  country_code = (resp && resp.country) ? resp.country : "";
-                  cookie.set('countryCode', country_code, {expires: 1});
-                  callback(country_code);
-                  instance.$nextTick(function() {
-                    country_select.intlTelInput("setCountry", country_code);
-                  });
+              $.get('https://ipinfo.io', function () {}, 'jsonp')
+                .always(function (resp) {
+                  countryCode = (resp && resp.country) ? resp.country : ''
+                  cookie.set('countryCode', countryCode, {expires: 1})
+                  callback(countryCode)
+                  instance.$nextTick(function () {
+                    countrySelect.intlTelInput('setCountry', countryCode)
+                  })
                 })
             }
           }
-        });
-
-        country_select.on("close:countrydropdown", function() {
-          let dial_code = country_select.intlTelInput('getSelectedCountryData').dialCode;
-          let phone = phones.find(function(phone) {
-            return phone.id === parseInt(phone_id);
-          });
-          if (!!phone.value && phone.value.indexOf(" ") !== -1) {
-            phone.value = `+${dial_code}${phone.value.slice(phone.value.indexOf(" "))}`;
-          } else {
-            phone.value = `+${dial_code} `;
-          }
-          $(`#country_${phone_id}_text`).focus();
         })
-      });
 
+        countrySelect.on('close:countrydropdown', function () {
+          let dialCode = countrySelect.intlTelInput('getSelectedCountryData').dialCode
+          let phone = phones.find(function (phone) {
+            return phone.id === parseInt(phoneId)
+          })
+          if (!!phone.value && phone.value.indexOf(' ') !== -1) {
+            phone.value = `+${dialCode}${phone.value.slice(phone.value.indexOf(' '))}`
+          } else {
+            phone.value = `+${dialCode} `
+          }
+          $(`#country_${phoneId}_text`).focus()
+        })
+      })
     }
   }
 </script>
@@ -944,12 +948,12 @@
 <style scoped>
 
   .add-contact-row {
-    max-height: 50px;
+    max-height: 50px
   }
 
   @media (max-width: 468px) {
     .action-button {
-      margin-left: 0;
+      margin-left: 0
     }
   }
 

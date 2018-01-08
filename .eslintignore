@@ -1,0 +1,11 @@
+/build/
+/config/
+/dist/
+/*.js
+/test/unit/coverage/
+/*.min.js
+src/assets/js/utils.js
+src/assets/js/intlTelInput.js
+src/assets/js/modernizr-custom.js
+
+

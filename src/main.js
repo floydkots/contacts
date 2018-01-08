@@ -1,35 +1,27 @@
+// The Vue build version to load with the `import` command
+// (runtime-only or standalone) has been set in webpack.base.conf with an alias.
 import Vue from 'vue'
-import VueRouter from 'vue-router'
+import App from './App'
+import router from './router'
 import Vuetify from 'vuetify'
 import VueCookie from 'vue-cookie'
-import 'vuetify/dist/vuetify.css'
 import store from './store'
 
-import App from './components/App.vue'
-import Home from './components/Home.vue'
-import Frequent from './components/Frequent.vue'
-import Duplicates from './components/Duplicates.vue'
-import { firebaseApp } from "./api/database";
+import 'jquery'
+import 'vuetify/dist/vuetify.css'
+import 'intl-tel-input/build/css/intlTelInput.css'
+import '../src/assets/css/index.css'
 
+Vue.use(Vuetify)
+Vue.use(VueCookie)
 
-Vue.use(VueRouter);
-Vue.use(Vuetify);
-Vue.use(VueCookie);
+Vue.config.productionTip = false
 
-
-const router = new VueRouter({
-  mode: 'history',
-  routes: [
-    {path: '/', component: Home},
-    {path: '/contacts', component: Home},
-    {path: '/frequent', component: Frequent},
-    {path: '/merge', component: Duplicates}
-  ]
-});
-
+/* eslint-disable no-new */
 new Vue({
   el: '#app',
   router,
   store,
-  render: h => h(App)
-});
+  template: '<App/>',
+  components: { App }
+})

@@ -40,7 +40,7 @@
                     cursor: 'pointer',
                     backgroundSize: 'contain',
                     backgroundColor: 'white',
-                    backgroundImage: contact.avatar ? `url(${contact.avatar})` : 'url(https://ssl.gstatic.com/s2/oz/images/sge/grey_silhouette.png)',
+                    backgroundImage: contact.avatar ? `url(${contact.avatar.thumbnail || contact.avatar.avatar})` : 'url(../../static/avatars/grey_silhouette.png)',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center center',
                     border: '2px solid #E3E3DE'
@@ -590,18 +590,21 @@
 </template>
 
 <script>
-  import { fetchContact, saveContact } from "../api/database";
+  import $ from 'jquery'
+  import { saveContact } from '../api/database'
+  const Modernizr = require('../../src/assets/js/modernizr-custom')
+  require('intl-tel-input')
 
   export default {
-    name: "edit-contact",
+    name: 'edit-contact',
     data: () => {
       return {
         avatar_hover: false,
         menu: false,
         contact: {
-          id:null,
-          fullName: "",
-          avatar: "",
+          id: null,
+          fullName: '',
+          avatar: {},
           emails: [],
           phones: [],
           addresses: [],
@@ -609,16 +612,16 @@
           hidden: false
         },
         temp_contact: {
-          id:null,
-          fullName: "",
-          avatar: "",
+          id: null,
+          fullName: '',
+          avatar: {},
           emails: [],
           phones: [],
           addresses: [],
           starred: false,
           hidden: false
         },
-        labels: ["Home", "Work", "Other"],
+        labels: ['Home', 'Work', 'Other'],
         fullNameHover: false,
         dateOfBirthHover: false,
         currentAddressHover: null,
@@ -626,7 +629,7 @@
         currentEmailHover: null,
         fullNameRules: [
           (v) => !!v || 'Full Name is required',
-          (v) => v && v.split(" ").length > 1 && v.split(" ")[1].length > 0 || 'Full Name must have at least 2 names'
+          (v) => (v && v.split(' ').length > 1 && v.split(' ')[1].length > 0) || 'Full Name must have at least 2 names'
         ],
         dateOfBirthRules: [
           (v) => !!v || 'Date of Birth is required'
@@ -636,218 +639,218 @@
         ],
         emailRules: [
           (v) => !!v || 'Email is required',
-          (v) => /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid'
+          (v) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) || 'E-mail must be valid'
         ]
       }
     },
 
     computed: {
-      contactToEdit: function() {
-        const contact = this.$store.getters.getActiveContact;
-        if (contact) this.temp_contact = JSON.parse(JSON.stringify(contact));
-        return contact ? JSON.parse(JSON.stringify(contact)) : this.temp_contact;
+      contactToEdit: function () {
+        const contact = this.$store.getters.getActiveContact
+        if (contact) this.temp_contact = JSON.parse(JSON.stringify(contact))
+        return contact ? JSON.parse(JSON.stringify(contact)) : this.temp_contact
       },
-      newAddressId: function() {
-        return this.contact.addresses.slice(-1)[0].id + 1;
+      newAddressId: function () {
+        return this.contact.addresses.slice(-1)[0].id + 1
       },
-      newPhoneId: function() {
-        return this.contact.phones.slice(-1)[0].id + 1;
+      newPhoneId: function () {
+        return this.contact.phones.slice(-1)[0].id + 1
       },
-      newEmailId: function() {
-        return this.contact.emails.slice(-1)[0].id + 1;
+      newEmailId: function () {
+        return this.contact.emails.slice(-1)[0].id + 1
       }
     },
 
     methods: {
-      openSlim: function() {
+      openSlim: function () {
         if (this.contact.avatar) {
-          this.$store.state.slim.instance.load(this.contact.avatar, (error, data) => {
+          this.$store.state.slim.instance.load(this.contact.avatar.avatar, (error, data) => {
             if (error) {
               this.$store.dispatch('setSnackbar', {
                 color: 'info',
                 message: 'Unable to automatically load your avatar. Proceed with manual upload.'
-              });
+              })
             }
-          });
+          })
         }
-        this.$store.dispatch('setSlim', {contact: this.contact});
+        this.$store.dispatch('setSlim', {contact: this.contact})
       },
-      addAddress: function() {
+      addAddress: function () {
         this.contact.addresses.push({
           id: this.newAddressId + 1,
-          value: "",
-          label: ""
-        });
+          value: '',
+          label: ''
+        })
       },
-      addPhone: function() {
+      addPhone: function () {
         this.contact.phones.push({
           id: this.newPhoneId + 1,
-          value: "",
-          label: ""
+          value: '',
+          label: ''
         })
       },
-      addEmail: function() {
+      addEmail: function () {
         this.contact.emails.push({
           id: this.newEmailId + 1,
-          value: "",
-          label: ""
+          value: '',
+          label: ''
         })
       },
-      removeAvatar: function() {
-        this.contact.avatar = "";
+      removeAvatar: function () {
+        this.contact.avatar = null
       },
-      removeFullName: function() {
-        this.contact.fullName = "";
-        this.$refs.fullName.reset();
+      removeFullName: function () {
+        this.contact.fullName = ''
+        this.$refs.fullName.reset()
       },
-      removeDateOfBirth: function() {
-        this.contact.dateOfBirth = null;
-        this.$refs.dateOfBirth.reset();
+      removeDateOfBirth: function () {
+        this.contact.dateOfBirth = null
+        this.$refs.dateOfBirth.reset()
       },
-      removeAddress: function(address) {
+      removeAddress: function (address) {
         if (this.contact.addresses.length > 1) {
           this.contact.addresses = this.contact.addresses.filter(
             (currentAddress) => {
-              return currentAddress.id !== address.id;
+              return currentAddress.id !== address.id
             })
         } else {
-          address.id = null;
-          address.value = "";
-          address.label = "";
+          address.id = null
+          address.value = ''
+          address.label = ''
         }
       },
-      removePhone: function(phone) {
+      removePhone: function (phone) {
         if (this.contact.phones.length > 1) {
           this.contact.phones = this.contact.phones.filter(
             (currentPhone) => {
-              return currentPhone.id !== phone.id;
+              return currentPhone.id !== phone.id
             }
           )
         } else {
-          phone.id = null;
-          phone.value = "";
-          phone.label = "";
-          let phone_refs = this.$refs[`phone_${phone.id}`];
-          if (phone_refs && phone_refs.length > 0) {
-            for (let phone_ref of phone_refs) {
-              phone_ref.reset();
+          phone.id = null
+          phone.value = ''
+          phone.label = ''
+          let phoneRefs = this.$refs[`phone_${phone.id}`]
+          if (phoneRefs && phoneRefs.length > 0) {
+            for (let phoneRef of phoneRefs) {
+              phoneRef.reset()
             }
           }
         }
       },
-      removeEmail: function(email) {
+      removeEmail: function (email) {
         if (this.contact.emails.length > 1) {
           this.contact.emails = this.contact.emails.filter(
             (currentEmail) => {
-              return currentEmail.id !== email.id;
+              return currentEmail.id !== email.id
             }
           )
         } else {
-          email.id = null;
-          email.value = "";
-          email.label = "";
-          let email_refs = this.$refs[`email_${email.id}`];
-          if (email_refs && email_refs.length > 0) {
-            for (let email_ref of email_refs) {
-              email_ref.reset();
+          email.id = null
+          email.value = ''
+          email.label = ''
+          let emailRefs = this.$refs[`email_${email.id}`]
+          if (emailRefs && emailRefs.length > 0) {
+            for (let emailRef of emailRefs) {
+              emailRef.reset()
             }
           }
         }
       },
-      clearEditContact: function() {
-        this.removeFullName();
-        this.removeDateOfBirth();
+      clearEditContact: function () {
+        this.removeFullName()
+        this.removeDateOfBirth()
         if (this.contact.addresses) {
           for (let address of this.contact.addresses) {
-            this.removeAddress(address);
+            this.removeAddress(address)
           }
         }
         if (this.contact.phones) {
           for (let phone of this.contact.phones) {
-            this.removePhone(phone);
+            this.removePhone(phone)
           }
         }
         if (this.contact.emails) {
           for (let email of this.contact.emails) {
-            this.removeEmail(email);
+            this.removeEmail(email)
           }
         }
       },
-      cancelEditContact: function() {
-        this.clearEditContact();
-        this.contact = JSON.parse(JSON.stringify(this.temp_contact));
-        this.$store.dispatch('toggleEditContact');
-        this.$store.dispatch('setActiveId', null);
+      cancelEditContact: function () {
+        this.clearEditContact()
+        this.contact = JSON.parse(JSON.stringify(this.temp_contact))
+        this.$store.dispatch('toggleEditContact')
+        this.$store.dispatch('setActiveId', null)
       },
-      validEntries: function() {
-        let fullName = false;
+      validEntries: function () {
+        let fullName = false
         if (this.$refs.fullName) {
-          fullName = this.$refs.fullName.valid;
+          fullName = this.$refs.fullName.valid
         }
 
-        let dateOfBirth = false;
-        if (this.$refs.dateOfBirth ) {
-          dateOfBirth = this.$refs.dateOfBirth.valid;
+        let dateOfBirth = false
+        if (this.$refs.dateOfBirth) {
+          dateOfBirth = this.$refs.dateOfBirth.valid
         }
 
         const addresses = () => {
           for (const address of this.$refs.addresses) {
             if (!address.valid) {
-              return false;
+              return false
             }
           }
-          return true;
-        };
+          return true
+        }
 
         let phones = () => {
-          if (!this.contact.phones) return false;
+          if (!this.contact.phones) return false
           for (const phone of this.contact.phones) {
             if (phone.id !== null && phone.id !== undefined) {
               if (!(this.$refs[`phone_${phone.id}`] && this.$refs[`phone_${phone.id}`][0].valid)) {
-                return false;
+                return false
               }
             }
           }
-          return this.contact.phones[0] ? !!this.contact.phones[0].value : false;
-        };
+          return this.contact.phones[0] ? !!this.contact.phones[0].value : false
+        }
 
         let emails = () => {
           for (const email of this.contact.emails) {
             if (email.id !== null && email.id !== undefined) {
               if (!(this.$refs[`email_${email.id}`] && this.$refs[`email_${email.id}`][0].valid)) {
-                return false;
+                return false
               }
             }
           }
-          return !!this.contact.emails[0].value;
-        };
+          return !!this.contact.emails[0].value
+        }
 
-        return (fullName && dateOfBirth && addresses() && phones() && emails());
+        return (fullName && dateOfBirth && addresses() && phones() && emails())
       },
-      saveEditedContact: function() {
-        let my_this = this;
+      saveEditedContact: function () {
+        let myThis = this
         if (this.validEntries()) {
           this.$store.dispatch('setSnackbar', {
             color: 'info',
-            message: 'Saving contact...',
-          });
-          function callback(error) {
-            let snackbar = {};
+            message: 'Saving contact...'
+          })
+          let callback = function (error) {
+            let snackbar = {}
             if (error) {
               snackbar = {
                 color: 'error',
-                message:`${error}`,
-              };
+                message: `${error}`
+              }
             } else {
               snackbar = {
                 color: 'success',
-                message: 'Contact saved successfully!',
-              };
+                message: 'Contact saved successfully!'
+              }
             }
-            my_this.$store.dispatch('setSnackbar', snackbar);
+            myThis.$store.dispatch('setSnackbar', snackbar)
           }
-          saveContact(my_this.contact, callback);
-          this.toggleEdit(this.contact.id);
+          saveContact(myThis.contact, callback)
+          this.toggleEdit(this.contact.id)
         } else {
           this.$store.dispatch('setSnackbar', {
             color: 'error',
@@ -855,114 +858,112 @@
           })
         }
       },
-      toggleEdit: function(id) {
-        this.$store.dispatch('setActiveId', id);
-        this.$store.dispatch('toggleEditContact');
+      toggleEdit: function (id) {
+        this.$store.dispatch('setActiveId', id)
+        this.$store.dispatch('toggleEditContact')
         if (!this.$store.state.view_contact) {
-          this.$store.dispatch('setViewTransition', false);
+          this.$store.dispatch('setViewTransition', false)
           this.$nextTick(() => {
-            this.$store.dispatch('toggleViewContact');
+            this.$store.dispatch('toggleViewContact')
           })
         }
       },
-      showAddressAdd: function(address) {
-        return address.id === this.contact.addresses[this.contact.addresses.length - 1].id && !!address.value;
+      showAddressAdd: function (address) {
+        return address.id === this.contact.addresses[this.contact.addresses.length - 1].id && !!address.value
       },
-      showPhoneAdd: function(phone) {
-        return phone.id === this.contact.phones[this.contact.phones.length - 1].id && !!phone.value;
+      showPhoneAdd: function (phone) {
+        return phone.id === this.contact.phones[this.contact.phones.length - 1].id && !!phone.value
       },
-      showEmailAdd: function(email) {
-        return email.id === this.contact.emails[this.contact.emails.length - 1].id && !!email.value;
+      showEmailAdd: function (email) {
+        return email.id === this.contact.emails[this.contact.emails.length - 1].id && !!email.value
       },
-      showAddressIcon: function(id) {
-        return id === this.contact.addresses[0].id;
+      showAddressIcon: function (id) {
+        return id === this.contact.addresses[0].id
       },
-      showPhoneIcon: function(id) {
-        return id === this.contact.phones[0].id;
+      showPhoneIcon: function (id) {
+        return id === this.contact.phones[0].id
       },
-      showEmailIcon: function(id) {
-        return id === this.contact.emails[0].id;
+      showEmailIcon: function (id) {
+        return id === this.contact.emails[0].id
       },
-      showFullNameRemove: function() {
-        return !!this.contact.fullName && (Modernizr.touchevents ? true : this.fullNameHover);
+      showFullNameRemove: function () {
+        return !!this.contact.fullName && (Modernizr.touchevents ? true : this.fullNameHover)
       },
-      showDateOfBirthRemove: function() {
-        return !!this.contact.dateOfBirth && (Modernizr.touchevents ? true : this.dateOfBirthHover);
+      showDateOfBirthRemove: function () {
+        return !!this.contact.dateOfBirth && (Modernizr.touchevents ? true : this.dateOfBirthHover)
       },
-      showAddressRemove: function(address) {
-        return this.currentAddressHover === address.id && !!address.value;
+      showAddressRemove: function (address) {
+        return this.currentAddressHover === address.id && !!address.value
       },
-      showPhoneRemove: function(phone) {
-        return this.currentPhoneHover === phone.id && !!phone.value;
+      showPhoneRemove: function (phone) {
+        return this.currentPhoneHover === phone.id && !!phone.value
       },
-      showEmailRemove: function(email) {
-        return this.currentEmailHover === email.id && !!email.value;
+      showEmailRemove: function (email) {
+        return this.currentEmailHover === email.id && !!email.value
       }
     },
 
-    beforeUpdate() {
+    beforeUpdate () {
       this.contact = this.contactToEdit
     },
 
-    updated() {
-      let instance = this;
-      let cookie = this.$cookie;
-      let phones = this.contact.phones;
-      let country_code = cookie.get('countryCode') || "";
-      $("div[id^='country_']").each(function() {
-        const phone_id = $(this).attr('id').split('_')[1];
-        const country_select = $(this);
-        country_select.intlTelInput({
-          preferredCountries: [country_code],
-          utilsScript: "../../public/js/utils.js",
-          initialCountry: "auto",
-          geoIpLookup: function(callback) {
-            if (country_code !== null && country_code !== "") {
-              callback(country_code);
-              instance.$nextTick(function() {
-                country_select.intlTelInput("setCountry", country_code);
-              });
+    updated () {
+      let instance = this
+      let cookie = this.$cookie
+      let phones = this.contact.phones
+      let countryCode = cookie.get('countryCode') || ''
+      $("div[id^='country_']").each(function () {
+        const phoneId = $(this).attr('id').split('_')[1]
+        const countrySelect = $(this)
+        countrySelect.intlTelInput({
+          preferredCountries: [countryCode],
+          initialCountry: 'auto',
+          geoIpLookup: function (callback) {
+            if (countryCode !== null && countryCode !== '') {
+              callback(countryCode)
+              instance.$nextTick(function () {
+                countrySelect.intlTelInput('setCountry', countryCode)
+              })
             } else {
-              $.get("https://ipinfo.io", function() {}, "jsonp")
-                .always(function(resp) {
-                  country_code = (resp && resp.country) ? resp.country : "";
-                  cookie.set('countryCode', country_code, {expires: 1});
-                  callback(country_code);
-                  instance.$nextTick(function() {
-                    country_select.intlTelInput("setCountry", country_code);
-                  });
+              $.get('https://ipinfo.io', function () {}, 'jsonp')
+                .always(function (resp) {
+                  countryCode = (resp && resp.country) ? resp.country : ''
+                  cookie.set('countryCode', countryCode, {expires: 1})
+                  callback(countryCode)
+                  instance.$nextTick(function () {
+                    countrySelect.intlTelInput('setCountry', countryCode)
+                  })
                 })
             }
           }
-        });
-
-        country_select.on("close:countrydropdown", function() {
-          let dial_code = country_select.intlTelInput('getSelectedCountryData').dialCode;
-          let phone = phones.find(function(phone) {
-            return phone.id === parseInt(phone_id);
-          });
-          if (!!phone.value && phone.value.indexOf(" ") !== -1) {
-            phone.value = `+${dial_code}${phone.value.slice(phone.value.indexOf(" "))}`;
-          } else {
-            phone.value = `+${dial_code} `;
-          }
-          $(`#country_${phone_id}_text`).focus();
         })
-      });
 
-    },
+        countrySelect.on('close:countrydropdown', function () {
+          let dialCode = countrySelect.intlTelInput('getSelectedCountryData').dialCode
+          let phone = phones.find(function (phone) {
+            return phone.id === parseInt(phoneId)
+          })
+          if (!!phone.value && phone.value.indexOf(' ') !== -1) {
+            phone.value = `+${dialCode}${phone.value.slice(phone.value.indexOf(' '))}`
+          } else {
+            phone.value = `+${dialCode} `
+          }
+          $(`#country_${phoneId}_text`).focus()
+        })
+      })
+    }
   }
 </script>
 
 <style scoped>
 
   .add-contact-row {
-    max-height: 50px;
+    max-height: 50px
   }
 
   @media (max-width: 468px) {
     .action-button {
-      margin-left: 0;
+      margin-left: 0
     }
   }
 

@@ -130,7 +130,7 @@
 
 <script>
   export default {
-    name: "select-toolbar",
+    name: 'select-toolbar',
     data: () => {
       return {
 
@@ -138,18 +138,18 @@
     },
     computed: {
       all: {
-        get: function() {
-          return this.$store.getters.allSelected;
+        get: function () {
+          return this.$store.getters.allSelected
         },
-        set: function(val) {
+        set: function (val) {
           if (val) {
             this.$store.dispatch('setSelected', this.$store.getters.getContacts.slice())
           } else {
-            this.$store.dispatch('setSelected', []);
+            this.$store.dispatch('setSelected', [])
           }
         }
       }
-    },
+    }
   }
 </script>
 

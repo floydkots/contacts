@@ -10,7 +10,7 @@
       ref="main_toolbar"
     >
       <v-toolbar-title
-        :style="$vuetify.breakpoint.smAndUp ? 'width: 200px; min-width: 100px' : 'min-width: 72px'"
+        :style="$vuetify.breakpoint.smAndUp ? 'width: 200px min-width: 100px' : 'min-width: 72px'"
         class="ma-0 pl-1"
       >
         <v-toolbar-side-icon
@@ -45,7 +45,7 @@
         <v-btn icon large>
           <v-avatar size="32px">
             <img
-              src="../../public/avatars/floydkots_avatar.jpg"
+              src="../../static/avatars/floydkots_avatar.jpg"
               alt="Floyd Kots"
             >
           </v-avatar>
@@ -56,17 +56,18 @@
 </template>
 
 <script>
+  const $ = require('jquery')
   export default {
-    name: "main-toolbar",
+    name: 'main-toolbar',
     data: () => {
       return {}
     },
     methods: {
-      toggleSearch: function() {
-       this.$store.dispatch('toggleSearch');
-       this.$nextTick(() => {
-         $('#search').focus();
-       });
+      toggleSearch: function () {
+        this.$store.dispatch('toggleSearch')
+        this.$nextTick(() => {
+          $('#search').focus()
+        })
       }
     }
   }

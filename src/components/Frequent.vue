@@ -22,7 +22,7 @@
 
 <script>
   export default {
-    name: "frequent"
+    name: 'frequent'
   }
 </script>
 

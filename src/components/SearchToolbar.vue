@@ -44,7 +44,9 @@
       :search-input.sync="search"
       v-model="select"
     >
-      <template slot="item" slot-scope="data">
+      <template
+        v-if="$store.state.contacts.length > 0"
+        slot="item" slot-scope="data">
         <v-list-tile-avatar>
           <v-avatar
             size="40px"
@@ -53,12 +55,12 @@
           >
             <img
               v-if="data.item.avatar"
-              :src="data.item.avatar"
+              :src="data.item.avatar.thumbnail || data.item.avatar.avatar"
               alt="avatar"
             />
             <span
               v-else
-              class="white--text headline"
+              class="headline white--text"
             >
               {{data.item.fullName ? data.item.fullName.slice(0, 1).toUpperCase() : ''}}
             </span>
@@ -72,25 +74,29 @@
 
 <script>
   export default {
-    name: "search-toolbar",
+    name: 'search-toolbar',
     data () {
       return {
         items: [],
         search: null,
-        select: null,
+        select: null
       }
     },
     watch: {
-      search(val) {
-        this.queryContacts(val);
+      search (val) {
+        if (this.$store.state.contacts.length > 0) {
+          this.queryContacts(val)
+        }
       },
 
-      select(val) {
-        if (val !== null && val !== undefined) {
-          this.$store.dispatch('setActiveId', val);
-          this.$store.dispatch('toggleViewContact');
-          this.$store.dispatch('toggleSearch');
-          this.$refs.search.clearableCallback();
+      select (val) {
+        if (this.$store.state.contacts.length > 0) {
+          if (val !== null && val !== undefined) {
+            this.$store.dispatch('setActiveId', val)
+            this.$store.dispatch('toggleViewContact')
+            this.$store.dispatch('toggleSearch')
+            this.$refs.search.clearableCallback()
+          }
         }
       }
     },
@@ -99,9 +105,9 @@
         if (v) {
           this.items = this.$store.state.contacts.filter(e => {
             return (e.fullName || '').toLowerCase().indexOf((v || '').toLowerCase()) > -1
-          });
+          })
         } else {
-          this.items = [];
+          this.items = []
         }
       }
     }

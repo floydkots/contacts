@@ -84,14 +84,14 @@
 
 <script>
   export default {
-    name: "drawer",
+    name: 'drawer',
     data: () => ({
       numOfContacts: 0,
       items: [
         {
           icon: 'contacts', text: 'Contacts', route: '/contacts'
         },
-        {icon: 'history', text:'Frequently accessed', route: '/frequent'},
+        {icon: 'history', text: 'Frequently accessed', route: '/frequent'},
         {icon: 'content_copy', text: 'Duplicates', route: '/merge'},
 
         {divider: true, inset: false},
@@ -126,11 +126,11 @@
 
         {icon: 'settings', text: 'Settings'},
         {icon: 'chat_bubble', text: 'Send feedback'},
-        {icon: 'help', text: 'Help'},
+        {icon: 'help', text: 'Help'}
       ]
     }),
     beforeUpdate () {
-      this.numOfContacts = this.$store.getters.getContacts.length;
+      this.numOfContacts = this.$store.getters.getContacts.length
     }
   }
 </script>

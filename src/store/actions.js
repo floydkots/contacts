@@ -1,62 +1,61 @@
 import * as types from './mutation-types'
 
+export const setContacts = ({commit}, contactsPayload) => {
+  commit(types.SET_CONTACTS, contactsPayload)
+}
 
-export const setContacts = ({commit}, contacts_payload) => {
-  commit(types.SET_CONTACTS, contacts_payload);
-};
-
-export const setNewContact = ({commit}, new_contact) => {
-  commit(types.SET_NEW_CONTACT, new_contact);
-};
+export const setNewContact = ({commit}, newContact) => {
+  commit(types.SET_NEW_CONTACT, newContact)
+}
 
 export const toggleViewContact = ({commit}) => {
-  commit(types.TOGGLE_VIEW_CONTACT);
-};
+  commit(types.TOGGLE_VIEW_CONTACT)
+}
 
-export const setViewTransition = ({commit}, view_transition) => {
-  commit(types.SET_VIEW_TRANSITION, view_transition);
-};
+export const setViewTransition = ({commit}, viewTransition) => {
+  commit(types.SET_VIEW_TRANSITION, viewTransition)
+}
 
 export const toggleAddContact = ({commit}) => {
-  commit(types.TOGGLE_ADD_CONTACT);
-};
+  commit(types.TOGGLE_ADD_CONTACT)
+}
 
 export const toggleEditContact = ({commit}) => {
-  commit(types.TOGGLE_EDIT_CONTACT);
-};
+  commit(types.TOGGLE_EDIT_CONTACT)
+}
 
 export const toggleDeleteContact = ({commit}) => {
-  commit(types.TOGGLE_DELETE_CONTACT);
-};
+  commit(types.TOGGLE_DELETE_CONTACT)
+}
 
-export const setSlim = ({commit}, slim_payload) => {
-  commit(types.SET_SLIM, slim_payload)
-};
+export const setSlim = ({commit}, slimPayload) => {
+  commit(types.SET_SLIM, slimPayload)
+}
 
 export const toggleDrawer = ({commit}) => {
-  commit(types.TOGGLE_DRAWER);
-};
+  commit(types.TOGGLE_DRAWER)
+}
 
 export const toggleSearch = ({commit}) => {
-  commit(types.TOGGLE_SEARCH);
-};
+  commit(types.TOGGLE_SEARCH)
+}
 
-export const setSelected = ({commit}, selected_payload) => {
-  commit(types.SET_SELECTED, selected_payload);
-};
+export const setSelected = ({commit}, selectedPayload) => {
+  commit(types.SET_SELECTED, selectedPayload)
+}
 
-export const setActiveId = ({commit}, active_id) => {
-  commit(types.SET_ACTIVE_ID, active_id);
-};
+export const setActiveId = ({commit}, activeId) => {
+  commit(types.SET_ACTIVE_ID, activeId)
+}
 
 export const toggleStar = ({commit}, id) => {
-  commit(types.TOGGLE_STAR, id);
-};
+  commit(types.TOGGLE_STAR, id)
+}
 
 export const setTooltips = ({commit}) => {
-  commit(types.SET_TOOLTIPS);
-};
+  commit(types.SET_TOOLTIPS)
+}
 
 export const setSnackbar = ({commit}, snackbar) => {
-  commit(types.SET_SNACKBAR, snackbar);
-};
+  commit(types.SET_SNACKBAR, snackbar)
+}

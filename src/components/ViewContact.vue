@@ -24,7 +24,7 @@
                     cursor: 'pointer',
                     backgroundSize: 'contain',
                     backgroundColor: 'white',
-                    backgroundImage: contact.avatar ? `url(${contact.avatar})` : 'url(https://ssl.gstatic.com/s2/oz/images/sge/grey_silhouette.png)',
+                    backgroundImage: contact.avatar ? `url(${contact.avatar.thumbnail || contact.avatar.avatar })` : 'url(../../static/avatars/grey_silhouette.png)',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center center',
                     border: '5px solid #E3E3DE'
@@ -205,7 +205,7 @@
                     cursor: 'pointer',
                     backgroundSize: 'contain',
                     backgroundColor: 'white',
-                    backgroundImage: contact.avatar ? `url(${contact.avatar})` : 'url(https://ssl.gstatic.com/s2/oz/images/sge/grey_silhouette.png)',
+                    backgroundImage: contact.avatar ? `url(${contact.avatar.thumbnail || contact.avatar.avatar})` : 'url(../../static/avatars/grey_silhouette.png)',
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'center center',
                     border: '5px solid #E3E3DE'
@@ -281,14 +281,14 @@
 
 <script>
   export default {
-    name: "view-contact",
+    name: 'view-contact',
     data: () => {
       return {
         avatar_hover: false,
         temp_contact: {
-          id:null,
-          fullName: "",
-          avatar: "",
+          id: null,
+          fullName: '',
+          avatar: '',
           emails: [],
           phones: [],
           addresses: [],
@@ -299,107 +299,106 @@
     },
 
     methods: {
-      openSlim: function() {
+      openSlim: function () {
         if (this.contact.avatar) {
-          this.$store.state.slim.instance.load(this.contact.avatar, (error, data) => {
+          this.$store.state.slim.instance.load(this.contact.avatar.avatar, (error, data) => {
             if (error) {
               this.$store.dispatch('setSnackbar', {
                 color: 'info',
                 message: 'Unable to automatically load your avatar. Proceed with manual upload.'
-              });
+              })
             }
-          });
+          })
         }
-        this.$store.dispatch('setSlim', {contact: this.contact});
+        this.$store.dispatch('setSlim', {contact: this.contact})
       },
 
-      toggleView: function() {
-        this.$store.dispatch('setViewTransition', 'dialog-transition');
-        this.$store.dispatch('toggleViewContact');
+      toggleView: function () {
+        this.$store.dispatch('setViewTransition', 'dialog-transition')
+        this.$store.dispatch('toggleViewContact')
       },
 
-      toggleEdit: function(id) {
-        this.$store.dispatch('toggleEditContact');
+      toggleEdit: function (id) {
+        this.$store.dispatch('toggleEditContact')
         this.$nextTick(() => {
-          this.$parent.$refs.edit_contact_dialog.$refs.fullName.focus();
-        });
+          this.$parent.$refs.edit_contact_dialog.$refs.fullName.focus()
+        })
       },
 
-      toggleDelete: function() {
-        this.$store.dispatch('toggleDeleteContact');
+      toggleDelete: function () {
+        this.$store.dispatch('toggleDeleteContact')
       },
 
-      hideContact: function() {
-        //TODO implement this functionality
+      hideContact: function () {
+        // TODO implement this functionality
       },
 
-      moreActions: function(item_name, id) {
-        switch(item_name) {
+      moreActions: function (itemName, id) {
+        switch (itemName) {
           case 'Delete':
-            this.toggleDelete(id);
-            break;
+            this.toggleDelete(id)
+            break
           case 'Hide':
-            this.hideContact(id);
-            break;
+            this.hideContact(id)
+            break
         }
       }
     },
 
     computed: {
-      contact: function() {
-        const contact = this.$store.getters.getActiveContact;
+      contact: function () {
+        const contact = this.$store.getters.getActiveContact
         if (this.$store.state.edit_contact) {
-          this.temp_contact = JSON.parse(JSON.stringify(contact));
+          this.temp_contact = JSON.parse(JSON.stringify(contact))
         }
-        return contact || this.temp_contact;
+        return contact || this.temp_contact
       },
-      iterableContactDetails: function() {
-        if (this.contact.hasOwnProperty('id')){
-          let iterableContactDetails = [];
-          const icons = this.$store.state.icons;
-          const no_decoration = `style="text-decoration: none;"`;
-          for(let [entry, values] of Object.entries(this.contact)) {
+      iterableContactDetails: function () {
+        if (this.contact.hasOwnProperty('id')) {
+          let iterableContactDetails = []
+          const icons = this.$store.state.icons
+          const noDecoration = `style="text-decoration: none"`
+          for (let [entry, values] of Object.entries(this.contact)) {
             if (icons.hasOwnProperty(entry)) {
-              let details = [];
-              switch(entry) {
+              let details = []
+              switch (entry) {
                 case 'emails':
                   for (const email of values) {
-                    let detail = `<a href="mailto:${email.value}" ${no_decoration}>${email.value}</a>`;
-                    detail += email.label ? ` • ${email.label}` : '';
-                    details.push(detail);
-                  }
-                  break;
-                case 'phones':
-                  for (const phone of values) {
-                    let detail = `<a href="tel:${phone.value}" ${no_decoration}>${phone.value}</a>`;
-                    detail += phone.label ? ` • ${phone.label}` : '';
-                    details.push(detail);
-                  }
-                  break;
-                case 'addresses':
-                  for (const address of values) {
-                    const encoded = encodeURIComponent(address.value);
-                    const gMapURI = `"https://maps.google.com/maps?q=${encoded}"`;
-                    const href = `${gMapURI} target='_blank'`;
-                    let detail = `<a href=${href} ${no_decoration}>${address.value}</a>`;
-                    detail += address.label ? ` • ${address.label}` : '';
+                    let detail = `<a href="mailto:${email.value}" ${noDecoration}>${email.value}</a>`
+                    detail += email.label ? ` • ${email.label}` : ''
                     details.push(detail)
                   }
-                  break;
+                  break
+                case 'phones':
+                  for (const phone of values) {
+                    let detail = `<a href="tel:${phone.value}" ${noDecoration}>${phone.value}</a>`
+                    detail += phone.label ? ` • ${phone.label}` : ''
+                    details.push(detail)
+                  }
+                  break
+                case 'addresses':
+                  for (const address of values) {
+                    const encoded = encodeURIComponent(address.value)
+                    const gMapURI = `"https://maps.google.com/maps?q=${encoded}"`
+                    const href = `${gMapURI} target='_blank'`
+                    let detail = `<a href=${href} ${noDecoration}>${address.value}</a>`
+                    detail += address.label ? ` • ${address.label}` : ''
+                    details.push(detail)
+                  }
+                  break
               }
 
               iterableContactDetails.push({
                 icon: icons[entry],
                 details: details
-              });
+              })
             }
           }
-          return iterableContactDetails;
+          return iterableContactDetails
         }
         return {}
       }
     }
-
   }
 </script>
 
