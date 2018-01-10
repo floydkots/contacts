@@ -2,6 +2,8 @@
 
 > Frontend for the contacts app in Vue.js
 
+Find it at [kots.pro/contacts](https://kots.pro/contacts).
+
 ## Build Setup
 
 ``` bash
